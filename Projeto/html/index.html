@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codex: A Jornada do Programador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="h-screen w-screen p-2 md:p-4 flex flex-col items-center overflow-hidden box-border">
+    <!-- Header / HUD -->
+    <header class="w-full max-w-4xl flex flex-row justify-between items-center bg-slate-900/80 border border-purple-900 rounded-xl p-2 md:p-3 mb-2 shadow-lg backdrop-blur-sm shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="text-3xl md:text-4xl">🧙‍♂️</div>
+            <div>
+                <h1 class="fantasy-font text-xl md:text-2xl text-amber-400 font-bold tracking-wider">Codex</h1>
+                <p class="text-xs md:text-sm text-slate-400">O Aprendiz de Lógica</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-1 w-auto">
+            <!-- HP -->
+            <div class="flex items-center gap-2">
+                <span class="text-slate-300 text-xs md:text-sm font-bold uppercase tracking-widest">Vida:</span>
+                <div id="hp-container" class="flex text-xl md:text-2xl gap-1">
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                    <span class="heart">❤️</span>
+                </div>
+            </div>
+            <!-- XP -->
+            <div class="flex items-center gap-2 w-32 md:w-64">
+                <span class="text-slate-300 text-xs md:text-sm font-bold uppercase tracking-widest">XP:</span>
+                <div class="w-full bg-slate-800 rounded-full h-2 md:h-3 border border-slate-600 overflow-hidden relative">
+                    <div id="xp-bar" class="bg-amber-400 h-full transition-all duration-500" style="width: 0%;"></div>
+                </div>
+                <span id="xp-text" class="text-amber-400 text-[10px] md:text-xs font-bold w-12 text-right">0/100</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Game Board -->
+    <main class="w-full max-w-4xl flex-1 flex flex-col min-h-0 relative pb-2">
+        <div class="board-container flex-1" id="board">
+            <!-- SVG Path (Dynamically drawn by JS) -->
+            <svg class="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path id="board-path" class="path-line" d="" />
+            </svg>
+            
+            <!-- Nodes (Dynamically populated) -->
+            <!-- Player Token -->
+            <div id="player" class="player-token">🧙‍♂️</div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="mt-4 shrink-0 flex justify-center">
+            <button id="btn-quest" onclick="startQuest()" class="fantasy-font text-lg md:text-xl px-6 py-3 bg-purple-700 hover:bg-purple-600 text-white font-bold rounded-lg border-2 border-amber-400 glow-btn transition-colors">
+                Avançar no Mapa ⚔️
+            </button>
+        </div>
+    </main>
+
+    <!-- Concept Modal -->
+    <div id="modal-concept" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="fantasy-font text-amber-400 text-xl font-bold">Pergaminho de Sabedoria</h2>
+                <span id="c-number" class="bg-purple-800 text-white text-xs px-2 py-1 rounded font-bold">1/10</span>
+            </div>
+            <h3 id="c-category" class="text-xl font-bold text-white mb-2">Categoria</h3>
+            <div class="bg-slate-800/80 border border-slate-600 rounded-lg p-4 mb-6 shadow-inner">
+                <p id="c-text" class="text-base md:text-lg leading-relaxed text-slate-200">Aqui vai a explicação do conceito...</p>
+            </div>
+            
+            <button onclick="proceedToQuestion()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded border border-indigo-400 transition-colors shadow-[0_0_15px_rgba(79,70,229,0.5)]">
+                Entendi! Mostrar Desafio 📖
+            </button>
+        </div>
+    </div>
+    
+    <!-- Question Modal -->
+    <div id="modal-question" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="q-category" class="fantasy-font text-amber-400 text-xl font-bold">Desafio de Algoritmos</h2>
+                <span id="q-number" class="bg-purple-800 text-white text-xs px-2 py-1 rounded font-bold">1/10</span>
+            </div>
+            <p id="q-text" class="text-lg mb-6 leading-relaxed text-slate-200">Aqui vai o texto da pergunta...</p>
+            
+            <div id="q-options" class="flex flex-col gap-3">
+                <!-- Buttons injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal (Correct/Wrong) -->
+    <div id="modal-feedback" class="modal-overlay">
+        <div class="modal-content text-center">
+            <div id="feedback-icon" class="text-6xl mb-4">✨</div>
+            <h2 id="feedback-title" class="fantasy-font text-3xl font-bold mb-2">Sucesso!</h2>
+            <p id="feedback-desc" class="text-slate-300 mb-6">Você dominou este conceito e avançou.</p>
+            <button onclick="closeFeedback()" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded border border-slate-500 text-white font-bold transition">
+                Continuar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Game Over / Victory Modal -->
+    <div id="modal-endgame" class="modal-overlay">
+        <div class="modal-content text-center">
+            <h2 id="end-title" class="fantasy-font text-4xl font-bold mb-4">Fim de Jogo</h2>
+            <p id="end-desc" class="text-lg text-slate-300 mb-6">A mensagem final vai aqui.</p>
+            <button onclick="resetGame()" class="px-8 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded font-bold text-lg transition">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+    <script src="../js/script.js"></script>
+</body>
+</html>
